@@ -4,6 +4,7 @@
 
 
 
+
 **NetSnake** is an open-source utility designed to simplify the search for information about a target victim on the Internet. Searches for information about the victim's IP address 
 
 ----
@@ -22,9 +23,6 @@ python netsnake.py -h
 python netsnake.py --help
 ```
 
-to get a list of all options:
-```python
-```
 
 ----
 ## Links
