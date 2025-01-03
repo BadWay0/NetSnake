@@ -3,10 +3,11 @@ import socket
 import time
 import datetime
 import re
+import ssl
 
 import argparse
 import requests
-import folium 
+from folium import Map as MP
 from colorama import *
 import nmap
 from datetime import datetime
@@ -22,7 +23,7 @@ bssid_pattern = re.compile(r'^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
 
 init(autoreset=True)
 
-VERSION =  "beta 0.79"
+VERSION =  "beta 0.81"
 
 date = datetime.today()
 
@@ -46,13 +47,19 @@ class Begining:
         print(f"[*] NetSnake Started at {current_time}\n")
 
     
-class Brain:
+class Main:
     def __init__(self, prompt_brain, prompt_argument):
         self.prompt_brain = prompt_brain()
         self.prompt_argument = prompt_argument()
         
-    def prompt_brain(prompt):
-        
+    def basic_main(prompt):
+
+        ssl_context = ssl.create_default_context()
+        conn = ssl_context.wrap_socket(socket.socket(socket.AF_INET), server_hostname=prompt)  
+        conn.connect((prompt, 443))
+
+        cert = conn.getpeercert()
+        conn.close
         whois = ipwhois.IPWhois(prompt) 
         whois_response = whois.lookup_rdap()
     
@@ -62,6 +69,7 @@ class Brain:
             data = {
                 '[*] IP address' : response.get('query'),
                 '[*] Provider' : response.get('isp'),
+                '[*] DNS' : cert['subjectAltName'][0],
                 '[*] ORG' : response.get('org'),
                 '[*] Country' : response.get('country'),
                 '[*] Region Name' : response.get('regionName'),
@@ -71,13 +79,17 @@ class Brain:
                 '[*] Longitude' : response.get('lon'),
                 '[*] ASN' : whois_response['asn'],
                 '[*] CIDR' : whois_response['network']['name'],
-                '[*] Time Zone' : response.get('timezone')
+                '[*] Time Zone' : response.get('timezone'),
+                '[*] OCSP' : cert['OCSP'],
+                '[*] Not Before' : cert["notBefore"],
+                '[*] Not After' : cert['notAfter'],
+                '[*] caIssuers' : cert['caIssuers']
             } 
 
             for k, v in data.items():
                 print(f"{k} - {v}")
             try:
-                area = folium.Map(location=[ response.get('lat'),  response.get('lon')])
+                area = MP(location=[ response.get('lat'),  response.get('lon')])
                 area.save(f'{response.get("query")}_{ response.get("city")}.html')
             except ValueError as error:
                 print(Fore.RED + f"[!] Somethings was wrong - {error}")
@@ -88,22 +100,22 @@ class Brain:
         d_i = data.items()
         
         print(Fore.GREEN + f"\n[*] The result is saved to an html file in the file folder")
-        parser.add_argument('-pR', '--prompt', type=Brain.prompt_argument, help="Simple information from the IP")
+        
     def prompt_argument(prompt):
         start_time_prompt = datetime.now()    
-        Brain.prompt_brain(prompt)
+        Main.basic_main(prompt)
         end_time_prompt = datetime.now()
 
         Begining.duration_time(start_time_prompt, end_time_prompt)
 
-def write_argument(file_path):
-    pass
 class Utils:
-    def __init__(self, url_argument, nm_argument):
+    def __init__(self, url_argument, nm_argument, check_spam, get_mac_info):
         self.url_argument = url_argument()
         self.nm_argument = nm_argument()
+        self.check_spam  = check_spam()
+        self.get_mac_info = get_mac_info()
         
-    def url_argument(prompt):
+    def hostname_argument(prompt):
         
         try:  
             sock = socket.gethostbyname(prompt)
@@ -114,13 +126,12 @@ class Utils:
         except (socket.gaierror, UnboundLocalError) as error:
             print(Fore.RED + f'[!] Invalid HostName - {error} (NetSnake)')
 
-        Brain.prompt_argument(sock)
+        Main.prompt_argument(sock)
 
     def nm_argument(prompt):
         Begining.start()
         start_time = datetime.now()
-        
-        
+               
         nm.scan(prompt, '1-1024', arguments='-sV -O')
         for host in nm.all_hosts(): 
             print(f'Host: {host} ({nm[host].hostname()})') 
@@ -142,13 +153,10 @@ class Utils:
 
         Begining.duration_time(start_time, end_time)
 
-
-
     def check_spam(prompt1):
         Begining.start()
         start_time = datetime.now()
         url = 'http://www.ip-score.com/ajax_handler/get_bls'
-
 
         count = 0
         blacklist = [
@@ -223,8 +231,6 @@ class Utils:
         else:
             print(Fore.RED + f"\n[*] Total servers that confirmed the IP is in the blacklist: {count}")
 
-
-
     def get_mac_info(mac_address):
         Begining.start()
         
@@ -263,8 +269,6 @@ class Utils:
         end_mac_time = datetime.now()
         Begining.duration_time(start_mac_time, end_mac_time)
 
-
-
     def dns_resolve(resolve_url):
         Begining.start()
 
@@ -302,28 +306,24 @@ class Utils:
         end_dns_time = datetime.now()
         Begining.duration_time(start_dns_time, end_dns_time)
 
-
-
 def parse_arguments():
-    parser = argparse.ArgumentParser(prog="NetSnake")
+    
     parser.add_argument('-mI', '--mac-info', type=Utils.get_mac_info, help='Displays information about the MAC address')
-    parser.add_argument('-pR', '--prompt', type=Brain.prompt_argument, help="Simple information from the IP")
-    parser.add_argument('-u', '--url', type=Utils.url_argument, help="Finds out the url ip address and displays information about it")
-    parser.add_argument('-f', '--file', type=write_argument, help="Imports ip addresses from a txt file and displays information about them (used with --write)")
+    parser.add_argument('-bS', '--basic-search', type=Main.basic_main, help="Simple information from the IP")
+    parser.add_argument('-hN', '--hostname', type=Utils.hostname_argument, help="Finds out the url ip address and displays information about it")
     parser.add_argument('-w', '--write', help="Saves all files and their information to a txt file (used with --file)")
     parser.add_argument('-v', '--version', action='version', version=f'Version: {VERSION}', help="Show program version and exit")
     parser.add_argument('-nS', '--nmap-scanner', type=Utils.nm_argument, help="Normal scanning with nmap (more information on the website nmap.org)")
     parser.add_argument('-sC', '--spam-chek', type=Utils.check_spam, help="Checking spam-database")
     parser.add_argument('-dR', "--dns-resolve", type=Utils.dns_resolve, help="resolve dns")
-
-    return parser.parse_args()
-
-def main():
-    args = parse_arguments()
     
+    args = parser.parse_args()
+
+    return args
+
 if __name__ == "__main__":
     try:
-        main()
+        parse_arguments()
 
     except Exception as exc:
         print(Fore.RED + f"[!] Error - {exc}")
