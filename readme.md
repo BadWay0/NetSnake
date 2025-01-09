@@ -9,8 +9,26 @@
 
 ----
 ## Instalation
+
+1. clone the rrepositories from the GitHub:
+
 ```markdown
 git clone "https://github.com/BadWay0/NetSnake"
+```
+2. go to the folder:
+
+```terminal
+cd NetSnake
+```
+3. download the reqiures 
+
+```python
+pip install -r requirements.txt
+```
+4. check the version
+
+```terminal
+python netsnake.py -v #current version is 0.91
 ```
 
 ----
@@ -22,8 +40,3 @@ python netsnake.py -h
 #or
 python netsnake.py --help
 ```
-
-
-----
-## Links
-+ Homepage - 

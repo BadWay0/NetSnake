@@ -26,7 +26,7 @@ nmap_path = [r"C:\Program Files (x86)\Nmap\nmap.exe"]
 nm = nmap.PortScanner(nmap_search_path=nmap_path)
 init(autoreset=True)
 
-VERSION =  "beta 0.91"
+VERSION =  "1.0.0"
 
 date = datetime.today()
 
