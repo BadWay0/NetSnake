@@ -187,53 +187,7 @@ class Utils:
         url = 'http://www.ip-score.com/ajax_handler/get_bls'
 
         count = 0
-        blacklist = [
-            "all.s5h.net",
-            'access.redhawk.org',
-            "bogons.cymru.com",
-            "db.wpbl.info",
-            "dnsbl-2.uceprotect.net",
-            "dnsbl.dronebl.org",
-            "drone.abuse.ch",
-            "dul.dnsbl.sorbs.net",
-            "http.dnsbl.sorbs.net",
-            "ix.dnsbl.manitu.net",
-            "misc.dnsbl.sorbs.net",
-            "orvedb.aupads.org",
-            "psbl.surriel.com",
-            "relays.nether.net",
-            "smtp.dnsbl.sorbs.net",
-            "spam.abuse.ch",
-            "spam.dnsbl.sorbs.net",
-            "spambot.bls.digibase.ca",
-            "spamsources.fabel.dk",
-            "ubl.unsubscore.com",
-            "web.dnsbl.sorbs.net",
-            "z.mailspike.net",
-            "b.barracudacentral.org",
-            "blacklist.woody.ch",
-            "combined.abuse.ch",
-            "dnsbl-1.uceprotect.net",
-            "dnsbl-3.uceprotect.net",
-            "dnsbl.sorbs.net",
-            "duinv.aupads.org",
-            "dyna.spamrats.com",
-            "ips.backscatterer.org",
-            "korea.services.net",
-            "noptr.spamrats.com",
-            "proxy.bl.gweep.ca",
-            "relays.bl.gweep.ca",
-            "singular.ttk.pte.hu",
-            "socks.dnsbl.sorbs.net",
-            "spam.dnsbl.anonmails.de",
-            "spam.spamrats.com",
-            "spamrbl.imp.ch",
-            "ubl.lashback.com",
-            "virus.rbl.jp",
-            "wormrbl.imp.ch",
-            "zombie.dnsbl.sorbs.net"
-        ]
-        
+
         for server in BLACKLIST:
             try:
                 
